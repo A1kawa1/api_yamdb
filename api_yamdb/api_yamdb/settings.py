@@ -1,5 +1,8 @@
 from pathlib import Path
+import os
 
+
+AUTH_USER_MODEL = 'model.User'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,6 +24,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'api.apps.ApiConfig',
+    'model.apps.ModelConfig',
 ]
 
 MIDDLEWARE = [
@@ -60,7 +65,7 @@ WSGI_APPLICATION = 'api_yamdb.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': str(os.path.join(BASE_DIR, "db.sqlite3")),
     }
 }
 
