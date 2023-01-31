@@ -1,5 +1,10 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.core.validators import (
+    MinValueValidator,
+    MaxValueValidator
+)
+from model.validators import year_validate
+from user.models import User
 
 
 class Title(models.Model):
@@ -7,9 +12,9 @@ class Title(models.Model):
         verbose_name='name',
         max_length=200
     )
-    
     year = models.IntegerField(
         verbose_name='release year',
+        validators=(year_validate,)
     )
     description = models.TextField(
         verbose_name='description',
@@ -18,6 +23,7 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         'Genre',
+        through='GenreTitle',
         blank=True
     )
     category = models.ForeignKey(
@@ -25,10 +31,6 @@ class Title(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True
-    )
-    rating = models.IntegerField(
-        null=True,
-        default=None
     )
 
     class Meta:
@@ -39,7 +41,7 @@ class Title(models.Model):
         return self.name
 
 
-class GenreAndCategory(models.Model):
+class Genre(models.Model):
     name = models.CharField(
         verbose_name='name',
         max_length=256
@@ -50,55 +52,88 @@ class GenreAndCategory(models.Model):
         unique=True
     )
 
-    class Meta:
-        abstract = True
-        ordering = ('name',)
+    def __str__(self):
+        return self.name
+
+
+class Category(models.Model):
+    name = models.CharField(
+        verbose_name='name',
+        max_length=256
+    )
+    slug = models.SlugField(
+        verbose_name='slug',
+        max_length=50,
+        unique=True
+    )
+
 
     def __str__(self):
         return self.name
 
 
-class Genre(GenreAndCategory):
-    pass
-
-
-class Category(GenreAndCategory):
-    pass
-
-
-class User(AbstractUser):
-    ROLE_CHOICES = (
-        ('user', 'user'),
-        ('moderator', 'moderator'),
-        ('admin', 'admin'),
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(
+        Genre,
+        on_delete=models.CASCADE
+    )
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE
     )
 
-    email = models.EmailField(
-        verbose_name='email',
-        unique=True,
+    def __str__(self) -> str:
+        return f'{self.genre} {self.title}'
+
+
+class Review(models.Model):
+    title = models.ForeignKey(
+        Title,
+        on_delete=models.CASCADE
     )
-    role = models.CharField(
-        max_length=255,
-        choices=ROLE_CHOICES,
-        default='user',
-        verbose_name='role'
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
     )
-    bio = models.TextField(
-        blank=True,
-        verbose_name='bio'
+    pub_date = models.DateTimeField(
+        verbose_name='pub date',
+        auto_now_add=True,
+        db_index=True
     )
+    text = models.TextField()
+    score = models.IntegerField(
+        verbose_name='score',
+        default=0,
+        validators=[
+            MaxValueValidator(10),
+            MinValueValidator(1)
+        ],
+    )
+
+    class Meta:
+        default_related_name = 'reviews'
+        ordering = ['-pub_date']
+
+
+class Comment(models.Model):
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE
+    )
+    pub_date = models.DateTimeField(
+        'Дата комментария',
+        auto_now_add=True,
+        db_index=True
+    )
+    text = models.TextField()
+
+    class Meta:
+        default_related_name = 'comments'
+        ordering = ['-pub_date']
 
     def __str__(self):
-        return self.username
-
-    @property
-    def is_admin(self):
-        return self.role == 'admin'
-
-    @property
-    def is_moderator(self):
-        return self.role == 'moderator'
-
-    @property
-    def is_user(self):
-        return self.role == 'user'
+        return self.author

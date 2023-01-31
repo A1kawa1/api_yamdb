@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from model.models import *
+from django.shortcuts import get_object_or_404
 from datetime import datetime
+from model.models import *
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -23,11 +24,48 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class TitleSerializerRead(serializers.ModelSerializer):
     category = CategorySerializer(
-        read_only=True
+        many=False,
+        required=True
     )
     genre = GenreSerializer(
         many=True,
-        read_only=True
+        required=False
+    )
+    rating = serializers.IntegerField()
+
+    class Meta:
+        model = Title
+        fields = (
+            'id'
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+            'rating'
+        )
+        read_only_fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category'
+        )
+
+
+class TitleSerializerCreate(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        queryset=Category.objects.all(),
+        slug_field='slug',
+        many=False
+    )
+    genre = serializers.SlugRelatedField(
+        queryset=Genre.objects.all(),
+        slug_field='slug',
+        many=True,
+        required=False,
     )
 
     class Meta:
@@ -38,29 +76,76 @@ class TitleSerializerRead(serializers.ModelSerializer):
             'year',
             'description',
             'genre',
-            'category',
-            'rating'
+            'category'
         )
 
+    def validate_year(self, data):
+        if not (0 <= data <= datetime.now().year):
+            raise serializers.ValidationError(
+                'недопустимая дата'
+            )
+        return data
 
-class TitleSerializerCreate(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(
-        queryset=Category.objects.all(),
-        slug_field='slug'
-    )
-    genre = serializers.SlugRelatedField(
-        queryset=Genre.objects.all(),
-        slug_field='slug',
-        many=True
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        default=serializers.CurrentUserDefault(),
+        read_only=True
     )
 
     class Meta:
-        model = Title
-        fields = ('id', 'name', 'description', 'year', 'category', 'genre')
+        model = Review
+        fields = (
+            'id',
+            'text',
+            'title',
+            'author',
+            'score',
+            'pub_date'
+        )
+        read_only_fields = ('title',)
 
-    def validate_year(self, data):
-        if not(0 <= data <= datetime.now().year):
-            raise serializers.ValidationError(
-                f'Год {data} больше текущего!'
-            )
+    def validate(self, data):
+        request = self.context.get('request')
+        author = request.user
+        if request.method == 'POST':
+            title_id = self.context.get('view').kwargs.get('title_id')
+            title = get_object_or_404(Title, pk=title_id)
+            if Review.objects.filter(
+                    author=author,
+                    title=title
+            ).exists():
+                raise serializers.ValidationError(
+                    'нельзя оставить отзыв дважды'
+                )
         return data
+
+    def validate_score(self, value):
+        if 0 >= value >= 10:
+            raise serializers.ValidationError(
+                'недопустимая оценка'
+            )
+        return value
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        default=serializers.CurrentUserDefault(),
+        read_only=True
+    )
+    # review = serializers.SlugRelatedField(
+    #     slug_field='text', read_only=True
+    # )
+
+    class Meta:
+        model = Comment
+        fields = (
+            'id',
+            'text',
+            'author',
+            'pub_date',
+            # 'review'
+        )
+        # read_only = ('review',)
