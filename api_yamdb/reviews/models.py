@@ -3,7 +3,7 @@ from django.core.validators import (
     MinValueValidator,
     MaxValueValidator
 )
-from model.validators import year_validate
+from reviews.validators import year_validate
 from user.models import User
 
 
@@ -112,7 +112,8 @@ class Review(models.Model):
 
     class Meta:
         default_related_name = 'reviews'
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
+        unique_together = ('title', 'author')
 
 
 class Comment(models.Model):
@@ -133,7 +134,7 @@ class Comment(models.Model):
 
     class Meta:
         default_related_name = 'comments'
-        ordering = ['-pub_date']
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.author

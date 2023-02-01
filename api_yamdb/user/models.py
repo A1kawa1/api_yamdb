@@ -1,7 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-AUTH_USER_MODEL = 'user.User'
 
 class User(AbstractUser):
     ROLE_CHOICES = (
