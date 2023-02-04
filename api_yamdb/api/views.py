@@ -6,7 +6,8 @@ from rest_framework import viewsets
 from rest_framework.mixins import (
     ListModelMixin,
     CreateModelMixin,
-    DestroyModelMixin
+    DestroyModelMixin,
+    UpdateModelMixin
 )
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.permissions import (IsAuthenticated,
@@ -115,7 +116,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (OwnerOrAdmins,)
     filter_backends = (SearchFilter,)
     filterset_fields = ("username",)
     search_fields = ("username",)
