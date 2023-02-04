@@ -1,6 +1,6 @@
 from http import HTTPStatus
 from django.core.mail import send_mail
-
+from rest_framework.decorators import action
 from django.contrib.auth.tokens import default_token_generator
 from rest_framework import viewsets
 from rest_framework.mixins import (
@@ -9,7 +9,8 @@ from rest_framework.mixins import (
     DestroyModelMixin
 )
 from rest_framework_simplejwt.tokens import AccessToken
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
@@ -111,19 +112,26 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    lookup_field = "username"
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (SearchFilter,)
+    filterset_fields = ("username",)
+    search_fields = ("username",)
+    lookup_field = "username"
 
+    @action(methods=["GET", "PATCH"],
+            detail=False,
+            url_path="me",
+            permission_classes=(IsAuthenticated,))
     def users_own_profile(self, request):
         user = request.user
         if request.method == "GET":
-            serializer = self.get_serializer(user)
+            serializer = MeSerializer(user)
             return Response(serializer.data, status=HTTPStatus.OK)
         if request.method == "PATCH":
-            serializer = self.get_serializer(
+            serializer = MeSerializer(
                 user,
                 data=request.data,
                 partial=True
@@ -132,6 +140,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=HTTPStatus.OK)
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
+
 
 def get_jwt_token(request):
     serializer = TokenSerializer(data=request.data)
