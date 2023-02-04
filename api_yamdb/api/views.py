@@ -7,7 +7,6 @@ from rest_framework.mixins import (
     ListModelMixin,
     CreateModelMixin,
     DestroyModelMixin,
-    UpdateModelMixin
 )
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.permissions import (IsAuthenticated,
@@ -72,7 +71,6 @@ class CategoryViewSet(GetPostDestroy):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthOrStaffOrReadOnly,)
 
@@ -91,7 +89,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (IsAuthOrStaffOrReadOnly,)
 
