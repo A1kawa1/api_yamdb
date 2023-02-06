@@ -1,8 +1,10 @@
+import re
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.shortcuts import get_object_or_404
 from django.db.models import Avg
 from datetime import datetime
+from user.validators import validate_username
 from reviews.models import *
 
 
@@ -153,17 +155,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ],
-        required=True,
-    )
-    email = serializers.EmailField(
-        validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ]
-    )
+
 
     class Meta:
         fields = ("username", "email", "first_name",
@@ -189,17 +181,21 @@ class RegisterDataSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
             UniqueValidator(queryset=User.objects.all())
-        ]
+        ],
+        max_length=150,
     )
     email = serializers.EmailField(
         validators=[
             UniqueValidator(queryset=User.objects.all())
-        ]
+        ],
+        max_length=254,
     )
 
     def validate_username(self, value):
         if value.lower() == "me":
             raise serializers.ValidationError("Username 'me' is not valid")
+        if re.search(r'^[-a-zA-Z0-9_]+$', value) is None:
+            raise serializers.ValidationError("Недопустимые символы")
         return value
 
     class Meta:

@@ -19,7 +19,7 @@ from api.serializers import *
 from reviews.models import *
 from api.permissions import *
 from api.filters import *
-
+from rest_framework.decorators import api_view, permission_classes
 
 class GetPostDestroy(
     ListModelMixin,
@@ -139,7 +139,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=HTTPStatus.OK)
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
-
+@api_view(["POST"])
 def get_jwt_token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -156,9 +156,14 @@ def get_jwt_token(request):
 
     return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
 
-
+@api_view(["POST"])
 def register(request):
     serializer = RegisterDataSerializer(data=request.data)
+    if User.objects.filter(
+        username=request.data.get('username'),
+        email=request.data.get('email'),
+    ).exists():
+        return Response(request.data, status=HTTPStatus.OK)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     user = get_object_or_404(

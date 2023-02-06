@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.core.validators import RegexValidator
 
+from .validators import validate_username
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -13,7 +13,7 @@ class User(AbstractUser):
         verbose_name='username',
         max_length=150,
         unique=True,
-        validators=(RegexValidator('^[\w.@+-]+\Z'),)
+        validators=(validate_username,)
     )
     first_name = models.CharField(
         max_length=150,
@@ -26,6 +26,7 @@ class User(AbstractUser):
     email = models.EmailField(
         verbose_name='email',
         unique=True,
+        max_length=254,
     )
     role = models.CharField(
         verbose_name='role',
