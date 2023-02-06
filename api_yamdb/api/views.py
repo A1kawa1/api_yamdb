@@ -1,5 +1,4 @@
 from http import HTTPStatus
-
 from api.filters import Title, TitleFilter
 from api.permissions import (IsAdminOrReadOnly, IsAuthOrStaffOrReadOnly,
                              OwnerOrAdmins)
@@ -31,10 +30,13 @@ class GetPostDestroy(
     DestroyModelMixin,
     viewsets.GenericViewSet
 ):
+    """Класс родитель для получения, записи, удаления"""
     pass
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    """Вьюсет для произведений"""
+
     queryset = Title.objects.all()
     serializer_class = TitleSerializerRead
     filter_backends = (DjangoFilterBackend,)
@@ -49,6 +51,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class GenreViewSet(GetPostDestroy):
+    """Вьюсет для жанров"""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (
@@ -62,6 +66,8 @@ class GenreViewSet(GetPostDestroy):
 
 
 class CategoryViewSet(GetPostDestroy):
+    """Вьюсет для катекорий"""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = (
@@ -75,6 +81,8 @@ class CategoryViewSet(GetPostDestroy):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Вьюсет для отзывов"""
+
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthOrStaffOrReadOnly,)
 
@@ -93,6 +101,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Вьюсет для комментариев"""
+
     serializer_class = CommentSerializer
     permission_classes = (IsAuthOrStaffOrReadOnly,)
 
@@ -114,6 +124,8 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для пользователей"""
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
