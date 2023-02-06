@@ -1,9 +1,12 @@
+import os
+from datetime import timedelta
 from pathlib import Path
 import os
 from datetime import timedelta
 
 AUTH_USER_MODEL = 'user.User'
 
+AUTH_USER_MODEL = 'user.User'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -28,7 +31,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'api.apps.ApiConfig',
-    'model.apps.ModelConfig',
+    'reviews.apps.ReviewsConfig',
     'user.apps.UserConfig',
     'django_filters',
 ]
