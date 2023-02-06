@@ -1,25 +1,29 @@
 from http import HTTPStatus
-from django.core.mail import send_mail
-from rest_framework.decorators import action
+
+from api.filters import Title, TitleFilter
+from api.permissions import (IsAdminOrReadOnly, IsAuthOrStaffOrReadOnly,
+                             OwnerOrAdmins)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, MeSerializer,
+                             RegisterDataSerializer, ReviewSerializer,
+                             TitleSerializerCreate, TitleSerializerRead,
+                             TokenSerializer, UserSerializer,
+                             get_object_or_404)
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
-from rest_framework.mixins import (
-    ListModelMixin,
-    CreateModelMixin,
-    DestroyModelMixin,
-)
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.decorators import action, api_view
+from rest_framework.filters import SearchFilter
+from rest_framework.mixins import (CreateModelMixin, DestroyModelMixin,
+                                   ListModelMixin)
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from api.serializers import *
-from reviews.models import *
-from api.permissions import *
-from api.filters import *
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Category, Genre, Review, User
+
 
 class GetPostDestroy(
     ListModelMixin,
@@ -139,6 +143,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=HTTPStatus.OK)
         return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
+
 @api_view(["POST"])
 def get_jwt_token(request):
     serializer = TokenSerializer(data=request.data)
@@ -155,6 +160,7 @@ def get_jwt_token(request):
         return Response({"token": str(token)}, status=HTTPStatus.OK)
 
     return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
+
 
 @api_view(["POST"])
 def register(request):

@@ -1,11 +1,11 @@
 import re
+from datetime import datetime
+
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
-from django.shortcuts import get_object_or_404
-from django.db.models import Avg
-from datetime import datetime
-from user.validators import validate_username
-from reviews.models import *
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -155,7 +155,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
 
     class Meta:
         fields = ("username", "email", "first_name",

@@ -3,6 +3,7 @@ from django.db import models
 
 from .validators import validate_username
 
+
 class User(AbstractUser):
     ROLE_CHOICES = (
         ('user', 'user'),
@@ -36,7 +37,7 @@ class User(AbstractUser):
     )
     bio = models.TextField(
         verbose_name='bio',
-        blank=True  
+        blank=True
     )
 
     def __str__(self):

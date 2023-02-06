@@ -1,8 +1,5 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.core.validators import (
-    MinValueValidator,
-    MaxValueValidator
-)
 from reviews.validators import year_validate
 from user.models import User
 
@@ -65,7 +62,6 @@ class Category(models.Model):
         max_length=50,
         unique=True
     )
-
 
     def __str__(self):
         return self.name

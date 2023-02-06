@@ -1,6 +1,8 @@
+import csv
+import sqlite3
+
 from django.core.management.base import BaseCommand
-import csv, sqlite3
-from reviews.models import *
+from reviews.models import Category, Comment, Genre, Review, Title
 from user.models import User
 
 
@@ -8,7 +10,7 @@ class Command(BaseCommand):
     text = 'import data from cas file'
 
     def handle(self, *args, **options):
-        with open('static/data/users.csv', encoding='utf-8') as File:  
+        with open('static/data/users.csv', encoding='utf-8') as File:
             reader = csv.DictReader(File)
             for row in reader:
                 User.objects.get_or_create(
@@ -21,7 +23,7 @@ class Command(BaseCommand):
                     last_name=row['last_name'],
                 )
 
-        with open('static/data/category.csv', encoding='utf-8') as File:  
+        with open('static/data/category.csv', encoding='utf-8') as File:
             reader = csv.DictReader(File)
             for row in reader:
                 Category.objects.get_or_create(
@@ -30,7 +32,7 @@ class Command(BaseCommand):
                     slug=row['slug'],
                 )
 
-        with open('static/data/titles.csv', encoding='utf-8') as File:  
+        with open('static/data/titles.csv', encoding='utf-8') as File:
             reader = csv.DictReader(File)
             for row in reader:
                 category = Category.objects.get(id=row['category'])
@@ -41,7 +43,7 @@ class Command(BaseCommand):
                     category=category,
                 )
 
-        with open('static/data/review.csv', encoding='utf-8') as File:  
+        with open('static/data/review.csv', encoding='utf-8') as File:
             reader = csv.DictReader(File)
             for row in reader:
                 user = User.objects.get(id=row['author'])
@@ -54,7 +56,7 @@ class Command(BaseCommand):
                     pub_date=row['pub_date'],
                 )
 
-        with open('static/data/genre.csv', encoding='utf-8') as File:  
+        with open('static/data/genre.csv', encoding='utf-8') as File:
             reader = csv.DictReader(File)
             for row in reader:
                 Genre.objects.get_or_create(
@@ -63,7 +65,7 @@ class Command(BaseCommand):
                     slug=row['slug'],
                 )
 
-        with open('static/data/genre_title.csv', encoding='utf-8') as File:  
+        with open('static/data/genre_title.csv', encoding='utf-8') as File:
             reader = csv.DictReader(File)
             con = sqlite3.connect('db.sqlite3')
             cur = con.cursor()
@@ -77,7 +79,7 @@ class Command(BaseCommand):
                 )
                 con.commit()
 
-        with open('static/data/comments.csv', encoding='utf-8') as File:  
+        with open('static/data/comments.csv', encoding='utf-8') as File:
             reader = csv.DictReader(File)
             for row in reader:
                 user = User.objects.get(id=row['author'])

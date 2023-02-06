@@ -1,7 +1,6 @@
-from pathlib import Path
 import os
 from datetime import timedelta
-
+from pathlib import Path
 
 AUTH_USER_MODEL = 'user.User'
 
