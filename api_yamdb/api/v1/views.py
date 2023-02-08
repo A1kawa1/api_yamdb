@@ -176,10 +176,10 @@ def get_jwt_token(request):
     ):
         token = AccessToken.for_user(user)
         return Response({"token": str(token)}, status=HTTPStatus.OK)
-    return Response(
-        'простите, но проверочный код не совпадает',
-        status=HTTPStatus.BAD_REQUEST
-    )
+    mes = {
+        'confirmation_code': 'неверный код подтверждения'
+    }
+    return Response(mes, status=HTTPStatus.BAD_REQUEST)
 
 
 @api_view(["POST"])
