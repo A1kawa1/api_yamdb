@@ -179,7 +179,7 @@ def get_jwt_token(request):
         return Response({"token": str(token)}, status=HTTPStatus.OK)
 
     return Response(
-        'простите, но проверочный код не совпдает',
+        'простите, но проверочный код не совпадает',
         status=HTTPStatus.BAD_REQUEST
     )
 
