@@ -152,15 +152,14 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == "GET":
             serializer = MeSerializer(user)
             return Response(serializer.data, status=HTTPStatus.OK)
-        else:
-            serializer = MeSerializer(
-                user,
-                data=request.data,
-                partial=True
-            )
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=HTTPStatus.OK)
+        serializer = MeSerializer(
+            user,
+            data=request.data,
+            partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=HTTPStatus.OK)
 
 
 @api_view(["POST"])
@@ -177,7 +176,6 @@ def get_jwt_token(request):
     ):
         token = AccessToken.for_user(user)
         return Response({"token": str(token)}, status=HTTPStatus.OK)
-
     return Response(
         'простите, но проверочный код не совпадает',
         status=HTTPStatus.BAD_REQUEST

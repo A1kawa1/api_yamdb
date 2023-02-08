@@ -1,9 +1,6 @@
 import os
 from datetime import timedelta
 from pathlib import Path
-from datetime import timedelta
-
-AUTH_USER_MODEL = 'user.User'
 
 AUTH_USER_MODEL = 'user.User'
 
@@ -51,7 +48,7 @@ ROOT_URLCONF = 'api_yamdb.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [str(os.path.join(BASE_DIR, "db.templates"))],
+        'DIRS': [os.path.join(BASE_DIR, "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

@@ -2,6 +2,7 @@ from django.db.models import Avg
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import year_validate
 from user.validators import validate_username
@@ -175,13 +176,13 @@ class TokenSerializer(serializers.Serializer):
 class RegisterDataSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
-            validate_username
+            validate_username,
         ],
         max_length=150,
     )
     email = serializers.EmailField(
         max_length=254,
-        required=True
+        required=True,
     )
 
     class Meta:
