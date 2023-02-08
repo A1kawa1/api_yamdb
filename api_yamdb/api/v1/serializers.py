@@ -1,11 +1,10 @@
-import re
-from datetime import datetime
-
 from django.db.models import Avg
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.validators import year_validate
+from user.validators import validate_username
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -75,6 +74,11 @@ class TitleSerializerCreate(serializers.ModelSerializer):
         many=True,
         required=False,
     )
+    year = serializers.IntegerField(
+        validators=[
+            year_validate
+        ]
+    )
 
     class Meta:
         model = Title
@@ -87,19 +91,18 @@ class TitleSerializerCreate(serializers.ModelSerializer):
             'category'
         )
 
-    def validate_year(self, data):
-        if not (0 <= data <= datetime.now().year):
-            raise serializers.ValidationError(
-                'недопустимая дата'
-            )
-        return data
-
 
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         slug_field='username',
         default=serializers.CurrentUserDefault(),
         read_only=True
+    )
+    score = serializers.IntegerField(
+        validators=[
+            MinValueValidator(0, 'оценка должна быть больше 0'),
+            MaxValueValidator(10, 'оценка должна быть меньше 10')
+        ]
     )
 
     class Meta:
@@ -128,13 +131,6 @@ class ReviewSerializer(serializers.ModelSerializer):
                     'нельзя оставить отзыв дважды'
                 )
         return data
-
-    def validate_score(self, value):
-        if 0 >= value >= 10:
-            raise serializers.ValidationError(
-                'недопустимая оценка'
-            )
-        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -179,23 +175,14 @@ class TokenSerializer(serializers.Serializer):
 class RegisterDataSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
-            UniqueValidator(queryset=User.objects.all())
+            validate_username
         ],
         max_length=150,
     )
     email = serializers.EmailField(
-        validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ],
         max_length=254,
+        required=True
     )
-
-    def validate_username(self, value):
-        if value.lower() == "me":
-            raise serializers.ValidationError("Username 'me' is not valid")
-        if re.search(r'^[-a-zA-Z0-9_]+$', value) is None:
-            raise serializers.ValidationError("Недопустимые символы")
-        return value
 
     class Meta:
         fields = ("username", "email")

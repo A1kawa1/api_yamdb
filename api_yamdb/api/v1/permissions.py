@@ -1,5 +1,4 @@
 from rest_framework import permissions
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
@@ -32,8 +31,6 @@ class IsAuthOrStaffOrReadOnly(permissions.BasePermission):
 
 class OwnerOrAdmins(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method == "PUT":
-            raise MethodNotAllowed('PUT')
         return (
             request.user.is_authenticated
             and (
