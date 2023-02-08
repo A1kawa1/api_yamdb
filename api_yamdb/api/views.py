@@ -21,7 +21,9 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
+from api_yamdb.api_yamdb.settings import EMAIL_ADMIN
 from reviews.models import Category, Genre, Review, User
+from rest_framework import mixins, viewsets
 
 
 class GetPostDestroy(
@@ -123,7 +125,12 @@ class CommentViewSet(viewsets.ModelViewSet):
         )
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(mixins.CreateModelMixin, 
+                   mixins.RetrieveModelMixin, 
+                   mixins.DestroyModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.UpdateModelMixin,
+                   viewsets.GenericViewSet):
     """Вьюсет для пользователей"""
 
     queryset = User.objects.all()
@@ -134,6 +141,7 @@ class UserViewSet(viewsets.ModelViewSet):
     filterset_fields = ("username",)
     search_fields = ("username",)
     lookup_field = "username"
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(methods=["GET", "PATCH"],
             detail=False,
@@ -144,7 +152,7 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == "GET":
             serializer = MeSerializer(user)
             return Response(serializer.data, status=HTTPStatus.OK)
-        if request.method == "PATCH":
+        else:
             serializer = MeSerializer(
                 user,
                 data=request.data,
@@ -153,7 +161,6 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=HTTPStatus.OK)
-        return Response(status=HTTPStatus.METHOD_NOT_ALLOWED)
 
 
 @api_view(["POST"])
@@ -192,7 +199,7 @@ def register(request):
     send_mail(
         subject="YaMDb registration",
         message=f"Your confirmation code: {confirmation_code}",
-        from_email=None,
+        from_email=EMAIL_ADMIN,
         recipient_list=[user.email],
     )
 
