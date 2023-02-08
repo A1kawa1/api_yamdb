@@ -169,8 +169,36 @@ class MeSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
+    username = serializers.CharField(
+        validators=[
+            UniqueValidator(queryset=User.objects.all())
+        ],
+        max_length=150,
+    )
+    confirmation_code = serializers.CharField(
+        required=True)
+
+    class Meta:
+        model = User
+        fields = (
+            'username',
+            'confirmation_code')
+
+    def validate(self, data):
+        username = data.get('username')
+        confirmation_code = data.get('confirmation_code')
+        if not username and not confirmation_code:
+            raise serializers.ValidationError(
+                f"Пустые поля: {username}, {confirmation_code}"
+            )
+        return data
+
+    def validate_username(self, username):
+        if not username:
+            raise serializers.ValidationError(
+                'Поле username не должно быть пустым'
+            )
+        return username
 
 
 class RegisterDataSerializer(serializers.ModelSerializer):
