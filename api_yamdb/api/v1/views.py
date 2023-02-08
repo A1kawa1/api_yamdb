@@ -18,12 +18,12 @@ from reviews.models import Category, Genre, Review, User, Title
 from api_yamdb.settings import ADMIN_EMAIL
 from api.v1.filters import Title, TitleFilter
 from api.v1.permissions import (IsAdminOrReadOnly, IsAuthOrStaffOrReadOnly,
-                             OwnerOrAdmins)
+                                OwnerOrAdmins)
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
-                             GenreSerializer, MeSerializer,
-                             RegisterDataSerializer, ReviewSerializer,
-                             TitleSerializerCreate, TitleSerializerRead,
-                             TokenSerializer, UserSerializer)
+                                GenreSerializer, MeSerializer,
+                                RegisterDataSerializer, ReviewSerializer,
+                                TitleSerializerCreate, TitleSerializerRead,
+                                TokenSerializer, UserSerializer)
 
 
 class GetPostDestroy(
