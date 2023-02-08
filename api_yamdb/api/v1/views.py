@@ -1,15 +1,8 @@
 from http import HTTPStatus
-from api.filters import Title, TitleFilter
-from api.permissions import (IsAdminOrReadOnly, IsAuthOrStaffOrReadOnly,
-                             OwnerOrAdmins)
-from api.serializers import (CategorySerializer, CommentSerializer,
-                             GenreSerializer, MeSerializer,
-                             RegisterDataSerializer, ReviewSerializer,
-                             TitleSerializerCreate, TitleSerializerRead,
-                             TokenSerializer, UserSerializer,
-                             get_object_or_404)
 from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.decorators import action, api_view
@@ -21,9 +14,16 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from api_yamdb.api_yamdb.settings import EMAIL_ADMIN
-from reviews.models import Category, Genre, Review, User
-from rest_framework import mixins, viewsets
+from reviews.models import Category, Genre, Review, User, Title
+from api_yamdb.settings import ADMIN_EMAIL
+from api.v1.filters import Title, TitleFilter
+from api.v1.permissions import (IsAdminOrReadOnly, IsAuthOrStaffOrReadOnly,
+                             OwnerOrAdmins)
+from api.v1.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, MeSerializer,
+                             RegisterDataSerializer, ReviewSerializer,
+                             TitleSerializerCreate, TitleSerializerRead,
+                             TokenSerializer, UserSerializer)
 
 
 class GetPostDestroy(
@@ -63,7 +63,7 @@ class GenreViewSet(GetPostDestroy):
     )
     pagination_class = PageNumberPagination
     filter_backends = (SearchFilter,)
-    search_fields = ('name', 'slug')
+    search_fields = ('name',)
     lookup_field = 'slug'
 
 
@@ -78,7 +78,7 @@ class CategoryViewSet(GetPostDestroy):
     )
     pagination_class = PageNumberPagination
     filter_backends = (SearchFilter,)
-    search_fields = ('name', 'slug')
+    search_fields = ('name',)
     lookup_field = 'slug'
 
 
@@ -109,8 +109,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthOrStaffOrReadOnly,)
 
     def get_queryset(self):
+        title_id = self.kwargs.get('title_id')
         review_id = self.kwargs.get('review_id')
-        review = get_object_or_404(Review, id=review_id)
+        review = get_object_or_404(
+            Review,
+            id=review_id,
+            title=title_id
+        )
         return review.comments.all()
 
     def perform_create(self, serializer):
@@ -125,12 +130,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         )
 
 
-class UserViewSet(mixins.CreateModelMixin, 
-                   mixins.RetrieveModelMixin, 
-                   mixins.DestroyModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.UpdateModelMixin,
-                   viewsets.GenericViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     """Вьюсет для пользователей"""
 
     queryset = User.objects.all()
@@ -178,29 +178,32 @@ def get_jwt_token(request):
         token = AccessToken.for_user(user)
         return Response({"token": str(token)}, status=HTTPStatus.OK)
 
-    return Response(serializer.errors, status=HTTPStatus.BAD_REQUEST)
+    return Response(
+        'простите, но проверочный код не совпадает',
+        status=HTTPStatus.BAD_REQUEST
+    )
 
 
 @api_view(["POST"])
 def register(request):
     serializer = RegisterDataSerializer(data=request.data)
-    if User.objects.filter(
-        username=request.data.get('username'),
-        email=request.data.get('email'),
-    ).exists():
-        return Response(request.data, status=HTTPStatus.OK)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
-    user = get_object_or_404(
-        User,
-        username=serializer.validated_data["username"]
-    )
+    email = serializer.validated_data['email']
+    username = serializer.validated_data['username']
+
+    try:
+        user, _ = User.objects.get_or_create(
+            username=username,
+            email=email
+        )
+    except IntegrityError:
+        return Response(status=HTTPStatus.BAD_REQUEST)
+
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject="YaMDb registration",
         message=f"Your confirmation code: {confirmation_code}",
-        from_email=EMAIL_ADMIN,
+        from_email=ADMIN_EMAIL,
         recipient_list=[user.email],
     )
-
     return Response(serializer.data, status=HTTPStatus.OK)

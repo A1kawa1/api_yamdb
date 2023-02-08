@@ -1,5 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.core.validators import RegexValidator
 from reviews.validators import year_validate
 from user.models import User
 
@@ -7,7 +8,7 @@ from user.models import User
 class Title(models.Model):
     name = models.CharField(
         verbose_name='name',
-        max_length=200
+        max_length=256
     )
     year = models.IntegerField(
         verbose_name='release year',
@@ -45,7 +46,11 @@ class Genre(models.Model):
     slug = models.SlugField(
         verbose_name='slug',
         max_length=50,
-        unique=True
+        unique=True,
+        validators=[RegexValidator(
+            r'^[-a-zA-Z0-9_]+$',
+            flags=0
+        )]
     )
 
     def __str__(self):
@@ -60,7 +65,11 @@ class Category(models.Model):
     slug = models.SlugField(
         verbose_name='slug',
         max_length=50,
-        unique=True
+        unique=True,
+        validators=[RegexValidator(
+            r'^[-a-zA-Z0-9_]+$',
+            flags=0
+        )]
     )
 
     def __str__(self):
