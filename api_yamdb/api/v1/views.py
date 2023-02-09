@@ -193,7 +193,7 @@ def register(request):
                 username=username,
                 email=email
             )
-        except:
+        except User.DoesNotExist:
             serializer.is_valid(raise_exception=True)
 
     confirmation_code = default_token_generator.make_token(user)

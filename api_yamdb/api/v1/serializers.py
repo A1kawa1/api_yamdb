@@ -206,7 +206,7 @@ class RegisterDataSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         max_length=254,
         required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())] 
+        validators=[UniqueValidator(queryset=User.objects.all())]
     )
 
     class Meta:
