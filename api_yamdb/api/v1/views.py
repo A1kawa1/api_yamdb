@@ -176,13 +176,25 @@ def get_jwt_token(request):
 @api_view(["POST"])
 def register(request):
     serializer = RegisterDataSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    email = serializer.validated_data['email']
-    username = serializer.validated_data['username']
-    user, _ = User.objects.get_or_create(
-        username=username,
-        email=email
-    )
+
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        username = serializer.validated_data['username']
+        user = User(
+            username=username,
+            email=email
+        )
+        user.save()
+    else:
+        email = serializer.data.get('email')
+        username = serializer.data.get('username')
+        try:
+            user = User.objects.get(
+                username=username,
+                email=email
+            )
+        except:
+            serializer.is_valid(raise_exception=True)
 
     confirmation_code = default_token_generator.make_token(user)
     send_mail(

@@ -3,6 +3,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
 from http import HTTPStatus
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import year_validate
@@ -197,6 +198,7 @@ class RegisterDataSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
             validate_username,
+            UniqueValidator(queryset=User.objects.all())
         ],
         max_length=150,
         required=True
@@ -204,6 +206,7 @@ class RegisterDataSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(
         max_length=254,
         required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())] 
     )
 
     class Meta:
@@ -212,12 +215,3 @@ class RegisterDataSerializer(serializers.ModelSerializer):
             "email"
         )
         model = User
-
-    def validate(self, data):
-        user = User.objects.filter(username=data.get('username'))
-        email = User.objects.filter(email=data.get('email'))
-        if not user.exists() and email.exists():
-            raise serializers.ValidationError('Недопустимый email')
-        if user.exists() and user.get().email != data.get('email'):
-            raise serializers.ValidationError('Недопустимый username')
-        return data
