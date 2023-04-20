@@ -1,5 +1,6 @@
 
-# api_final
+# api_yamdb
+API YaMDb собирает отзывы пользователей на различные произведения такие как фильмы, книги и музыка.
 
 ## Description
 
@@ -43,7 +44,7 @@ Perform migrations:
 ```
 python3 manage.py migrate
 ```
-
+`Also create an .env file in the /TrainingBot directory and specify the data for postgresql and the bot token.`   
 Launch a project:
 
 ```
