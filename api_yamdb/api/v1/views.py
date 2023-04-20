@@ -2,7 +2,6 @@ from http import HTTPStatus
 from django.contrib.auth.tokens import default_token_generator
 from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
-from django.db import IntegrityError
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 from rest_framework.decorators import action, api_view
@@ -170,32 +169,32 @@ def get_jwt_token(request):
         User,
         username=serializer.validated_data["username"]
     )
-
-    if default_token_generator.check_token(
-        user, serializer.validated_data["confirmation_code"]
-    ):
-        token = AccessToken.for_user(user)
-        return Response({"token": str(token)}, status=HTTPStatus.OK)
-    return Response(
-        'простите, но проверочный код не совпадает',
-        status=HTTPStatus.BAD_REQUEST
-    )
+    token = AccessToken.for_user(user)
+    return Response({"token": str(token)}, status=HTTPStatus.OK)
 
 
 @api_view(["POST"])
 def register(request):
     serializer = RegisterDataSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-    email = serializer.validated_data['email']
-    username = serializer.validated_data['username']
 
-    try:
-        user, _ = User.objects.get_or_create(
+    if serializer.is_valid():
+        email = serializer.validated_data['email']
+        username = serializer.validated_data['username']
+        user = User(
             username=username,
             email=email
         )
-    except IntegrityError:
-        return Response(status=HTTPStatus.BAD_REQUEST)
+        user.save()
+    else:
+        email = serializer.data.get('email')
+        username = serializer.data.get('username')
+        try:
+            user = User.objects.get(
+                username=username,
+                email=email
+            )
+        except User.DoesNotExist:
+            serializer.is_valid(raise_exception=True)
 
     confirmation_code = default_token_generator.make_token(user)
     send_mail(

@@ -1,8 +1,10 @@
 from django.db.models import Avg
+from django.contrib.auth.tokens import default_token_generator
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator, UniqueValidator
+from rest_framework.validators import UniqueValidator
+from http import HTTPStatus
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import year_validate
 from user.validators import validate_username
@@ -152,7 +154,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         fields = ("username", "email", "first_name",
                   "last_name", "bio", "role")
@@ -169,22 +170,48 @@ class MeSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
+    username = serializers.CharField(required=True)
+    confirmation_code = serializers.CharField(required=True)
+
+    def validate(self, data):
+        username = data.get('username')
+        confirmation_code = data.get('confirmation_code')
+
+        user = get_object_or_404(
+            User,
+            username=username
+        )
+
+        if not default_token_generator.check_token(
+            user, confirmation_code
+        ):
+            raise serializers.ValidationError(
+                {
+                    'confirmation_code': 'неверный код подтверждения'
+                },
+                HTTPStatus.BAD_REQUEST
+            )
+        return data
 
 
 class RegisterDataSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
             validate_username,
+            UniqueValidator(queryset=User.objects.all())
         ],
         max_length=150,
+        required=True
     )
     email = serializers.EmailField(
         max_length=254,
         required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
     )
 
     class Meta:
-        fields = ("username", "email")
+        fields = (
+            "username",
+            "email"
+        )
         model = User
